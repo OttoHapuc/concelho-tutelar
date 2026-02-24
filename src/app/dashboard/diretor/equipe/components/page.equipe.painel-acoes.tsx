@@ -478,14 +478,23 @@ export function PainelAcoes() {
 
         {/* Tabs e Tabela */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-4 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="todas">
+          <TabsList className="mb-4 w-full justify-start overflow-x-auto bg-transparent p-0 gap-2 h-auto">
+            <TabsTrigger
+              value="todas"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border bg-white shadow-sm hover:bg-gray-50 h-9 px-4 rounded-md"
+            >
               Todas ({acoes.length})
             </TabsTrigger>
-            <TabsTrigger value="andamento">
+            <TabsTrigger
+              value="andamento"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border bg-white shadow-sm hover:bg-gray-50 h-9 px-4 rounded-md"
+            >
               Em Andamento ({contarPorStatus("andamento")})
             </TabsTrigger>
-            <TabsTrigger value="concluidas">
+            <TabsTrigger
+              value="concluidas"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border bg-white shadow-sm hover:bg-gray-50 h-9 px-4 rounded-md"
+            >
               Concluídas ({contarPorStatus("concluidas")})
             </TabsTrigger>
           </TabsList>
