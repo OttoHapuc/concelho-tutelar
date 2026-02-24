@@ -1,8 +1,6 @@
 "use client";
 
-import React from "react"
-
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -21,6 +19,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
   Search,
   Eye,
   Clock,
@@ -28,7 +40,12 @@ import {
   AlertTriangle,
   Activity,
   ArrowLeft,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type StatusAcao =
   | "reconhecimento"
@@ -50,6 +67,128 @@ interface Acao {
   dataInicio: string;
   ultimaAtualizacao: string;
   prioridade: "baixa" | "media" | "alta" | "urgente";
+}
+
+function ColumnHeader({
+  title,
+  sortDirection,
+  onSort,
+  isFiltered,
+  onFilter,
+  options,
+  type = "text",
+}: {
+  title: string;
+  sortDirection: "asc" | "desc" | null;
+  onSort: () => void;
+  isFiltered: boolean;
+  onFilter: (value: string | null) => void;
+  options?: { label: string; value: string }[];
+  type?: "text" | "select";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tempValue, setTempValue] = useState("");
+
+  const handleApply = () => {
+    onFilter(tempValue || null);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    setTempValue("");
+    onFilter(null);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="flex items-center space-x-1">
+      <span className="text-sm font-semibold">{title}</span>
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 hover:bg-red-800 hover:text-white group"
+          onClick={onSort}
+        >
+          {sortDirection === "desc" ? (
+            <ArrowDown className="h-3 w-3 group-hover:text-white" />
+          ) : sortDirection === "asc" ? (
+            <ArrowUp className="h-3 w-3 group-hover:text-white" />
+          ) : (
+            <ArrowUpDown className="h-3 w-3 text-muted-foreground/50 group-hover:text-white" />
+          )}
+        </Button>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-6 w-6", isFiltered && "text-primary")}
+            >
+              <Filter className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3" align="start">
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Filtrar por {title}
+              </h4>
+              <div className="space-y-2">
+                <Select defaultValue="contains">
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Operador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contains">Contém</SelectItem>
+                    <SelectItem value="equals">Igual</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {type === "select" && options ? (
+                  <Select value={tempValue} onValueChange={setTempValue}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Selecione uma opção..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value)}
+                    className="h-8"
+                    placeholder="Digite o valor..."
+                  />
+                )}
+              </div>
+              <div className="flex justify-between pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClear}
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Limpar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleApply}
+                  className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
 }
 
 const acoes: Acao[] = [
@@ -189,16 +328,50 @@ const prioridadeConfig = {
   urgente: "bg-red-100 text-red-700",
 };
 
+const statusOptions = Object.keys(statusConfig).map((key) => ({
+  label: statusConfig[key as StatusAcao].label,
+  value: key,
+}));
+
+const prioridadeOptions = [
+  { label: "Baixa", value: "baixa" },
+  { label: "Média", value: "media" },
+  { label: "Alta", value: "alta" },
+  { label: "Urgente", value: "urgente" },
+];
+
 export function PainelAcoes() {
   const [tab, setTab] = useState("todas");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Acao;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [filters, setFilters] = useState<Partial<Record<keyof Acao, string>>>(
+    {}
+  );
 
-  const filtrarAcoes = (status: string) => {
-    if (status === "todas") return acoes;
-    if (status === "andamento")
-      return acoes.filter((a) => a.status !== "concluida");
-    if (status === "concluidas")
-      return acoes.filter((a) => a.status === "concluida");
-    return acoes.filter((a) => a.status === status);
+  const handleSort = (key: keyof Acao) => {
+    setSortConfig((current) => {
+      if (current?.key === key && current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+      if (current?.key === key && current.direction === "desc") {
+        return null;
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const handleFilter = (key: keyof Acao, value: string | null) => {
+    setFilters((current) => {
+      const newFilters = { ...current };
+      if (value === null || value === "") {
+        delete newFilters[key];
+      } else {
+        newFilters[key] = value;
+      }
+      return newFilters;
+    });
   };
 
   const contarPorStatus = (status: StatusAcao | "andamento" | "concluidas") => {
@@ -208,6 +381,45 @@ export function PainelAcoes() {
       return acoes.filter((a) => a.status === "concluida").length;
     return acoes.filter((a) => a.status === status).length;
   };
+
+  const getFilteredAndSortedAcoes = () => {
+    let result = [...acoes];
+
+    // Filtro por Tab
+    if (tab === "andamento") {
+      result = result.filter((a) => a.status !== "concluida");
+    } else if (tab === "concluidas") {
+      result = result.filter((a) => a.status === "concluida");
+    }
+
+    // Filtros customizados
+    Object.keys(filters).forEach((key) => {
+      const filterKey = key as keyof Acao;
+      const filterValue = filters[filterKey];
+      if (filterValue) {
+        result = result.filter((a) => {
+          const itemValue = String(a[filterKey]).toLowerCase();
+          return itemValue.includes(filterValue.toLowerCase());
+        });
+      }
+    });
+
+    // Ordenação
+    if (sortConfig) {
+      result.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  };
+
+  const filteredAcoes = getFilteredAndSortedAcoes();
 
   return (
     <Card>
@@ -283,59 +495,168 @@ export function PainelAcoes() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-semibold">Protocolo</TableHead>
-                    <TableHead className="font-semibold">Tipo</TableHead>
-                    <TableHead className="font-semibold">Vítima</TableHead>
-                    <TableHead className="font-semibold">Local</TableHead>
-                    <TableHead className="font-semibold">Responsável</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Prioridade</TableHead>
-                    <TableHead className="font-semibold">Atualização</TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Protocolo"
+                        sortDirection={
+                          sortConfig?.key === "protocolo"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("protocolo")}
+                        isFiltered={!!filters.protocolo}
+                        onFilter={(v) => handleFilter("protocolo", v)}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Tipo"
+                        sortDirection={
+                          sortConfig?.key === "tipo" ? sortConfig.direction : null
+                        }
+                        onSort={() => handleSort("tipo")}
+                        isFiltered={!!filters.tipo}
+                        onFilter={(v) => handleFilter("tipo", v)}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Vítima"
+                        sortDirection={
+                          sortConfig?.key === "vitima"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("vitima")}
+                        isFiltered={!!filters.vitima}
+                        onFilter={(v) => handleFilter("vitima", v)}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Local"
+                        sortDirection={
+                          sortConfig?.key === "bairro"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("bairro")}
+                        isFiltered={!!filters.bairro}
+                        onFilter={(v) => handleFilter("bairro", v)}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Responsável"
+                        sortDirection={
+                          sortConfig?.key === "responsavel"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("responsavel")}
+                        isFiltered={!!filters.responsavel}
+                        onFilter={(v) => handleFilter("responsavel", v)}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Status"
+                        sortDirection={
+                          sortConfig?.key === "status"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("status")}
+                        isFiltered={!!filters.status}
+                        onFilter={(v) => handleFilter("status", v)}
+                        options={statusOptions}
+                        type="select"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Prioridade"
+                        sortDirection={
+                          sortConfig?.key === "prioridade"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("prioridade")}
+                        isFiltered={!!filters.prioridade}
+                        onFilter={(v) => handleFilter("prioridade", v)}
+                        options={prioridadeOptions}
+                        type="select"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <ColumnHeader
+                        title="Atualização"
+                        sortDirection={
+                          sortConfig?.key === "ultimaAtualizacao"
+                            ? sortConfig.direction
+                            : null
+                        }
+                        onSort={() => handleSort("ultimaAtualizacao")}
+                        isFiltered={!!filters.ultimaAtualizacao}
+                        onFilter={(v) => handleFilter("ultimaAtualizacao", v)}
+                      />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtrarAcoes(tab).map((acao) => (
-                    <TableRow key={acao.id} className="hover:bg-muted/30">
-                      <TableCell className="font-mono text-sm font-medium">
-                        {acao.protocolo}
-                      </TableCell>
-                      <TableCell>{acao.tipo}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{acao.vitima}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {acao.idade} anos
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{acao.bairro}</TableCell>
-                      <TableCell>{acao.responsavel}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`gap-1 ${statusConfig[acao.status].color}`}
-                        >
-                          {statusConfig[acao.status].icon}
-                          {statusConfig[acao.status].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={prioridadeConfig[acao.prioridade]}
-                        >
-                          {acao.prioridade.charAt(0).toUpperCase() +
-                            acao.prioridade.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {acao.ultimaAtualizacao}
-                        </div>
+                  {filteredAcoes.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={8}
+                        className="h-24 text-center text-muted-foreground"
+                      >
+                        Nenhum resultado encontrado.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredAcoes.map((acao) => (
+                      <TableRow key={acao.id} className="hover:bg-muted/30">
+                        <TableCell className="font-mono text-sm font-medium">
+                          {acao.protocolo}
+                        </TableCell>
+                        <TableCell>{acao.tipo}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{acao.vitima}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {acao.idade} anos
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{acao.bairro}</TableCell>
+                        <TableCell>{acao.responsavel}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={`gap-1 ${statusConfig[acao.status].color}`}
+                          >
+                            {statusConfig[acao.status].icon}
+                            {statusConfig[acao.status].label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={prioridadeConfig[acao.prioridade]}
+                          >
+                            {acao.prioridade.charAt(0).toUpperCase() +
+                              acao.prioridade.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {acao.ultimaAtualizacao}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
