@@ -14,6 +14,8 @@ import {
   BarChart3,
   Users,
   ClipboardList,
+  Activity,
+  Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -64,6 +66,27 @@ const menuGroups: MenuGroup[] = [
         label: "Triagem e Direcionamento",
         href: "/dashboard/diretor/triagem",
         icon: ClipboardList,
+      },
+    ],
+  },
+  {
+    title: "Operação",
+    role: "Conselheiro(a)",
+    items: [
+      {
+        label: "Painel Operacional",
+        href: "/dashboard/operacao",
+        icon: Activity,
+      },
+      {
+        label: "Relatórios",
+        href: "/dashboard/operacao/relatorios",
+        icon: FileText,
+      },
+      {
+        label: "Encaminhamentos",
+        href: "/dashboard/operacao/encaminhamentos",
+        icon: Send,
       },
     ],
   },
