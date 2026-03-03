@@ -10,7 +10,6 @@ import {
   Shield,
   Menu,
   X,
-  Map,
   BarChart3,
   Users,
   ClipboardList,
@@ -147,7 +146,7 @@ export function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-4 py-6">
+          <nav className="flex-1 px-4 py-6">
             {menuGroups.map((group) => (
               <div key={group.title} className="mb-6">
                 <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider mb-3 px-2">

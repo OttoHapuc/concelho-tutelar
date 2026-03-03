@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -20,10 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Send,
   Plus,
   Search,
-  Calendar,
   Edit,
   Trash2,
   Building,
@@ -98,7 +95,7 @@ export default function PageEncaminhamentos() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Encaminhamentos</h1>
@@ -114,9 +111,9 @@ export default function PageEncaminhamentos() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle>Histórico de Encaminhamentos</CardTitle>
-            <div className="relative w-64">
+            <div className="relative w-full md:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por destino..."
@@ -127,8 +124,8 @@ export default function PageEncaminhamentos() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[640px] sm:min-w-0">
             <TableHeader>
               <TableRow>
                 <TableHead>Protocolo</TableHead>
