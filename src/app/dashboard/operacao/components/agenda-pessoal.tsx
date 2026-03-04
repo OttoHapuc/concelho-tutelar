@@ -13,9 +13,8 @@ import {
   MoreVertical,
   Plus,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -93,7 +92,7 @@ const prioridadeColors = {
 };
 
 export function AgendaPessoal() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate] = useState(new Date());
 
   const formattedDate = currentDate.toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -108,17 +107,16 @@ export function AgendaPessoal() {
 
   return (
     <div className="flex flex-col h-full bg-background rounded-lg border shadow-sm">
-      {/* Header do Calendário */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-b">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
           <h2 className="font-semibold text-lg">Minha Agenda</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
           <Button variant="outline" size="icon" className="h-8 w-8">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium capitalize min-w-[200px] text-center">
+          <span className="text-xs sm:text-sm font-medium capitalize min-w-0 sm:min-w-[200px] text-center">
             {formattedDate}
           </span>
           <Button variant="outline" size="icon" className="h-8 w-8">
@@ -141,7 +139,7 @@ export function AgendaPessoal() {
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {horariosTrabalho.map((horario) => {
           const atendimento = getAtendimentoNoHorario(horario);
 

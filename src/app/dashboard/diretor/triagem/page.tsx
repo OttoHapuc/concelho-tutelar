@@ -66,12 +66,18 @@ export default function TriagemPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="w-fit mb-4">
-          <TabsTrigger value="triagem" className="gap-2">
+        <TabsList className="mb-4 w-full justify-start overflow-x-auto bg-transparent p-0 gap-2 h-auto">
+          <TabsTrigger
+            value="triagem"
+            className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white border bg-white shadow-sm hover:bg-gray-50 h-9 px-4 rounded-md"
+          >
             <ClipboardList className="h-4 w-4" />
             Triagem de Denúncias
           </TabsTrigger>
-          <TabsTrigger value="quadro" className="gap-2">
+          <TabsTrigger
+            value="quadro"
+            className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white border bg-white shadow-sm hover:bg-gray-50 h-9 px-4 rounded-md"
+          >
             <Calendar className="h-4 w-4" />
             Quadro de Atendimento
           </TabsTrigger>

@@ -20,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  FileText,
   Plus,
   Search,
   Calendar,
@@ -117,7 +116,7 @@ export default function PageRelatorios() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Relatórios Técnicos</h1>
@@ -133,9 +132,9 @@ export default function PageRelatorios() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle>Meus Relatórios</CardTitle>
-            <div className="relative w-64">
+            <div className="relative w-full md:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por protocolo..."
@@ -149,8 +148,8 @@ export default function PageRelatorios() {
             Relatórios emitidos por você.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[640px] sm:min-w-0">
             <TableHeader>
               <TableRow>
                 <TableHead>Protocolo</TableHead>
@@ -222,8 +221,8 @@ export default function PageRelatorios() {
             Visão dos relatórios emitidos pelos demais conselheiros(as).
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[640px] sm:min-w-0">
             <TableHeader>
               <TableRow>
                 <TableHead>Protocolo</TableHead>

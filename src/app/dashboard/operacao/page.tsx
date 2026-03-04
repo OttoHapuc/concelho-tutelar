@@ -119,7 +119,7 @@ export default function PageOperacao() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6 overflow-x-hidden">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Área Operacional</h1>
@@ -128,8 +128,7 @@ export default function PageOperacao() {
           </p>
         </div>
         
-        {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-start md:justify-end">
           <Button
             onClick={handleRelatorioClick}
             disabled={!selectedDenuncia}
@@ -160,8 +159,8 @@ export default function PageOperacao() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="h-full flex flex-col">
+      <div className="grid gap-6 lg:grid-cols-2 lg:auto-rows-[minmax(0,1fr)] w-full">
+        <Card className="flex flex-col w-full max-h-[420px] lg:h-[600px]">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -171,33 +170,104 @@ export default function PageOperacao() {
               Denúncias sob sua responsabilidade. Selecione para realizar ações.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Protocolo</TableHead>
-                  <TableHead>Vítima</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockDenuncias.map((denuncia) => (
-                  <TableRow
-                    key={denuncia.id}
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-muted/50",
-                      selectedDenuncia?.id === denuncia.id ? "bg-muted border-l-4 border-l-primary" : ""
-                    )}
-                    onClick={() => setSelectedDenuncia(denuncia)}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{denuncia.protocolo}</span>
+          <CardContent className="flex-1 min-h-0 overflow-y-auto">
+            <div className="hidden md:block overflow-x-auto">
+              <Table className="min-w-[720px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Protocolo</TableHead>
+                    <TableHead>Vítima</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockDenuncias.map((denuncia) => (
+                    <TableRow
+                      key={denuncia.id}
+                      className={cn(
+                        "cursor-pointer transition-colors hover:bg-muted/50",
+                        selectedDenuncia?.id === denuncia.id ? "bg-muted border-l-4 border-l-primary" : ""
+                      )}
+                      onClick={() => setSelectedDenuncia(denuncia)}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{denuncia.protocolo}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "w-fit mt-1 text-[10px]",
+                              denuncia.prioridade === "critica" && "border-red-500 text-red-500",
+                              denuncia.prioridade === "alta" && "border-orange-500 text-orange-500",
+                              denuncia.prioridade === "media" && "border-yellow-500 text-yellow-500",
+                            )}
+                          >
+                            {denuncia.prioridade.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{denuncia.vitima}</span>
+                          <span className="text-xs text-muted-foreground">{denuncia.tipo}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="secondary" className="w-fit">
+                            {denuncia.status.replace("_", " ")}
+                          </Badge>
+                          {denuncia.condicao && (
+                            <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
+                              <Activity className="h-3 w-3" />
+                              {denuncia.condicao.replace("_", " ")}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          {denuncia.temRelatorio && (
+                            <span className="inline-flex" title="Possui Relatório">
+                              <FileText className="h-4 w-4 text-blue-500" />
+                            </span>
+                          )}
+                          {denuncia.temEncaminhamento && (
+                            <span className="inline-flex" title="Possui Encaminhamento">
+                              <Send className="h-4 w-4 text-emerald-500" />
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="space-y-3 md:hidden">
+              {mockDenuncias.map((denuncia) => (
+                <div
+                  key={denuncia.id}
+                  onClick={() => setSelectedDenuncia(denuncia)}
+                  className={cn(
+                    "rounded-lg border p-3 bg-background cursor-pointer transition-colors",
+                    selectedDenuncia?.id === denuncia.id
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted/50"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">
+                          {denuncia.protocolo}
+                        </span>
                         <Badge
                           variant="outline"
                           className={cn(
-                            "w-fit mt-1 text-[10px]",
+                            "text-[10px]",
                             denuncia.prioridade === "critica" && "border-red-500 text-red-500",
                             denuncia.prioridade === "alta" && "border-orange-500 text-orange-500",
                             denuncia.prioridade === "media" && "border-yellow-500 text-yellow-500",
@@ -206,48 +276,39 @@ export default function PageOperacao() {
                           {denuncia.prioridade.toUpperCase()}
                         </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         <span className="font-medium">{denuncia.vitima}</span>
-                        <span className="text-xs text-muted-foreground">{denuncia.tipo}</span>
+                        <span className="mx-1">•</span>
+                        <span>{denuncia.tipo}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="secondary" className="w-fit">
-                          {denuncia.status.replace("_", " ")}
-                        </Badge>
-                        {denuncia.condicao && (
-                          <span className="text-xs text-blue-600 font-medium flex items-center gap-1">
-                            <Activity className="h-3 w-3" />
-                            {denuncia.condicao.replace("_", " ")}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        {denuncia.temRelatorio && (
-                          <span className="inline-flex" title="Possui Relatório">
-                            <FileText className="h-4 w-4 text-blue-500" />
-                          </span>
-                        )}
-                        {denuncia.temEncaminhamento && (
-                          <span className="inline-flex" title="Possui Encaminhamento">
-                            <Send className="h-4 w-4 text-emerald-500" />
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] whitespace-nowrap">
+                      {denuncia.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+
+                  {denuncia.condicao && (
+                    <div className="mt-2 flex items-center gap-1 text-[11px] text-blue-600 font-medium">
+                      <Activity className="h-3 w-3" />
+                      <span>{denuncia.condicao.replace("_", " ")}</span>
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex justify-end gap-2">
+                    {denuncia.temRelatorio && (
+                      <FileText className="h-4 w-4 text-blue-500" />
+                    )}
+                    {denuncia.temEncaminhamento && (
+                      <Send className="h-4 w-4 text-emerald-500" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <div className="h-[600px]">
+        <div className="w-full max-h-[420px] lg:h-[600px]">
           <AgendaPessoal />
         </div>
       </div>
