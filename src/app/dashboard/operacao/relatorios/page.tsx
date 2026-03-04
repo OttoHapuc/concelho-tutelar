@@ -42,6 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowDown, ArrowUp, ArrowUpDown, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Mock Data
 interface Relatorio {
@@ -75,6 +78,130 @@ const mockDenunciasSemRelatorio = [
   { id: "4", protocolo: "CT-2024-001560", vitima: "Pedro Santos" },
 ];
 
+type RelatorioSortKey = "protocolo" | "data" | "tecnico" | "resumo";
+
+function ColumnHeader({
+  title,
+  sortDirection,
+  onSort,
+  isFiltered,
+  onFilter,
+  options,
+  type = "text",
+}: {
+  title: string;
+  sortDirection: "asc" | "desc" | null;
+  onSort: () => void;
+  isFiltered: boolean;
+  onFilter: (value: string | null) => void;
+  options?: { label: string; value: string }[];
+  type?: "text" | "select";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tempValue, setTempValue] = useState("");
+
+  const handleApply = () => {
+    onFilter(tempValue || null);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    setTempValue("");
+    onFilter(null);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="flex items-center space-x-1">
+      <span className="text-sm font-semibold">{title}</span>
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 hover:bg-red-800 hover:text-white group"
+          onClick={onSort}
+        >
+          {sortDirection === "desc" ? (
+            <ArrowDown className="h-3 w-3 group-hover:text-white" />
+          ) : sortDirection === "asc" ? (
+            <ArrowUp className="h-3 w-3 group-hover:text-white" />
+          ) : (
+            <ArrowUpDown className="h-3 w-3 text-muted-foreground/50 group-hover:text-white" />
+          )}
+        </Button>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-6 w-6", isFiltered && "text-primary")}
+            >
+              <Filter className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3" align="start">
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-muted-foreground">
+                Filtrar por {title}
+              </h4>
+              <div className="space-y-2">
+                <Select defaultValue="contains">
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Operador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contains">Contém</SelectItem>
+                    <SelectItem value="equals">Igual</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {type === "select" && options ? (
+                  <Select value={tempValue} onValueChange={setTempValue}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Selecione uma opção..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value)}
+                    className="h-8"
+                    placeholder="Digite o valor..."
+                  />
+                )}
+              </div>
+              <div className="flex justify-between pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClear}
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Limpar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleApply}
+                  className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
 export default function PageRelatorios() {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalCreateOpen, setModalCreateOpen] = useState(false);
@@ -82,18 +209,115 @@ export default function PageRelatorios() {
   const [selectedProtocolo, setSelectedProtocolo] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const [sortMeus, setSortMeus] = useState<{
+    key: RelatorioSortKey;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [filtersMeus, setFiltersMeus] = useState<
+    Partial<Record<RelatorioSortKey, string>>
+  >({});
+
+  const [sortColegas, setSortColegas] = useState<{
+    key: RelatorioSortKey;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [filtersColegas, setFiltersColegas] = useState<
+    Partial<Record<RelatorioSortKey, string>>
+  >({});
+
   const tecnicoAtual = mockRelatorios[0]?.tecnico ?? "";
 
-  const relatoriosFiltrados = mockRelatorios.filter((relatorio) =>
-    relatorio.protocolo.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleSortMeus = (key: RelatorioSortKey) => {
+    setSortMeus((current) => {
+      if (current?.key === key && current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+      if (current?.key === key && current.direction === "desc") {
+        return null;
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const handleSortColegas = (key: RelatorioSortKey) => {
+    setSortColegas((current) => {
+      if (current?.key === key && current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+      if (current?.key === key && current.direction === "desc") {
+        return null;
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const handleFilterMeus = (key: RelatorioSortKey, value: string | null) => {
+    setFiltersMeus((current) => {
+      const newFilters = { ...current };
+      if (value === null || value === "") {
+        delete newFilters[key];
+      } else {
+        newFilters[key] = value;
+      }
+      return newFilters;
+    });
+  };
+
+  const handleFilterColegas = (key: RelatorioSortKey, value: string | null) => {
+    setFiltersColegas((current) => {
+      const newFilters = { ...current };
+      if (value === null || value === "") {
+        delete newFilters[key];
+      } else {
+        newFilters[key] = value;
+      }
+      return newFilters;
+    });
+  };
+
+  const getFilteredAndSortedRelatorios = (
+    base: Relatorio[],
+    sortConfig: { key: RelatorioSortKey; direction: "asc" | "desc" } | null,
+    filters: Partial<Record<RelatorioSortKey, string>>
+  ) => {
+    let result = base.filter((relatorio) =>
+      relatorio.protocolo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    Object.keys(filters).forEach((key) => {
+      const filterKey = key as RelatorioSortKey;
+      const filterValue = filters[filterKey];
+      if (filterValue) {
+        result = result.filter((relatorio) => {
+          const itemValue = String(relatorio[filterKey]).toLowerCase();
+          return itemValue.includes(filterValue.toLowerCase());
+        });
+      }
+    });
+
+    if (sortConfig) {
+      result.sort((a, b) => {
+        const aValue = String(a[sortConfig.key]).toLowerCase();
+        const bValue = String(b[sortConfig.key]).toLowerCase();
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  };
+
+  const meusRelatorios = getFilteredAndSortedRelatorios(
+    mockRelatorios.filter((relatorio) => relatorio.tecnico === tecnicoAtual),
+    sortMeus,
+    filtersMeus
   );
 
-  const meusRelatorios = relatoriosFiltrados.filter(
-    (relatorio) => relatorio.tecnico === tecnicoAtual
-  );
-
-  const relatoriosColegas = relatoriosFiltrados.filter(
-    (relatorio) => relatorio.tecnico !== tecnicoAtual
+  const relatoriosColegas = getFilteredAndSortedRelatorios(
+    mockRelatorios.filter((relatorio) => relatorio.tecnico !== tecnicoAtual),
+    sortColegas,
+    filtersColegas
   );
 
   const handleCreateClick = () => {
@@ -152,10 +376,50 @@ export default function PageRelatorios() {
           <Table className="min-w-[640px] sm:min-w-0">
             <TableHeader>
               <TableRow>
-                <TableHead>Protocolo</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Técnico</TableHead>
-                <TableHead>Resumo</TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Protocolo"
+                    sortDirection={
+                      sortMeus?.key === "protocolo" ? sortMeus.direction : null
+                    }
+                    onSort={() => handleSortMeus("protocolo")}
+                    isFiltered={!!filtersMeus.protocolo}
+                    onFilter={(v) => handleFilterMeus("protocolo", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Data"
+                    sortDirection={
+                      sortMeus?.key === "data" ? sortMeus.direction : null
+                    }
+                    onSort={() => handleSortMeus("data")}
+                    isFiltered={!!filtersMeus.data}
+                    onFilter={(v) => handleFilterMeus("data", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Técnico"
+                    sortDirection={
+                      sortMeus?.key === "tecnico" ? sortMeus.direction : null
+                    }
+                    onSort={() => handleSortMeus("tecnico")}
+                    isFiltered={!!filtersMeus.tecnico}
+                    onFilter={(v) => handleFilterMeus("tecnico", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Resumo"
+                    sortDirection={
+                      sortMeus?.key === "resumo" ? sortMeus.direction : null
+                    }
+                    onSort={() => handleSortMeus("resumo")}
+                    isFiltered={!!filtersMeus.resumo}
+                    onFilter={(v) => handleFilterMeus("resumo", v)}
+                  />
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -225,10 +489,50 @@ export default function PageRelatorios() {
           <Table className="min-w-[640px] sm:min-w-0">
             <TableHeader>
               <TableRow>
-                <TableHead>Protocolo</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Técnico</TableHead>
-                <TableHead>Resumo</TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Protocolo"
+                    sortDirection={
+                      sortColegas?.key === "protocolo" ? sortColegas.direction : null
+                    }
+                    onSort={() => handleSortColegas("protocolo")}
+                    isFiltered={!!filtersColegas.protocolo}
+                    onFilter={(v) => handleFilterColegas("protocolo", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Data"
+                    sortDirection={
+                      sortColegas?.key === "data" ? sortColegas.direction : null
+                    }
+                    onSort={() => handleSortColegas("data")}
+                    isFiltered={!!filtersColegas.data}
+                    onFilter={(v) => handleFilterColegas("data", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Técnico"
+                    sortDirection={
+                      sortColegas?.key === "tecnico" ? sortColegas.direction : null
+                    }
+                    onSort={() => handleSortColegas("tecnico")}
+                    isFiltered={!!filtersColegas.tecnico}
+                    onFilter={(v) => handleFilterColegas("tecnico", v)}
+                  />
+                </TableHead>
+                <TableHead>
+                  <ColumnHeader
+                    title="Resumo"
+                    sortDirection={
+                      sortColegas?.key === "resumo" ? sortColegas.direction : null
+                    }
+                    onSort={() => handleSortColegas("resumo")}
+                    isFiltered={!!filtersColegas.resumo}
+                    onFilter={(v) => handleFilterColegas("resumo", v)}
+                  />
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
